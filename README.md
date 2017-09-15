@@ -2,6 +2,12 @@
 
 Pure JavaScript implementation of the TinyMT pseudo random number generator.
 
+## Installing
+
+```
+npm install --save tinymtjs
+```
+
 ## Usage
 
 Please note, this library is not cryptographically secure:
