@@ -1,0 +1,1 @@
+export TinyMT from './TinyMT';
