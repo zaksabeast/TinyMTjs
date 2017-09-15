@@ -1,1 +1,1 @@
-export TinyMT from './TinyMT';
+export default from './TinyMT';
