@@ -1,6 +1,6 @@
 {
   "name": "tinymtjs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Pure JavaScript implementation of the TinyMT pseudo random number generator",
   "main": "lib/index.js",
   "scripts": {
