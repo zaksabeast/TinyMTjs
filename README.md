@@ -13,7 +13,7 @@ npm install --save tinymtjs
 Please note, this library is not cryptographically secure:
 
 ```
-import TinyMT from 'TinyMTjs'; // Import TinyMT
+import TinyMT from 'tinymtjs'; // Import TinyMT
 
 let tiny = new TinyMT([0xA, 0xB, 0xC, 0xD]); // Seed with an array (length of four)
 let tiny2 = new TinyMT(0xAABBCCDD); // Seed with a number
