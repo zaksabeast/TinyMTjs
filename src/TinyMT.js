@@ -3,7 +3,7 @@ function leftShift32bitSafe(base, bits){
 }
 
 function add32bitSafe(num1, num2){
-    return ((((num1>>16) + (num2>>16))&0xFFFF)<<16) + (num1&0xFFFF) + (num2&0xFFFF);
+    return ((((num1>>>16) + (num2>>>16))&0xFFFF)*0x10000) + (num1&0xFFFF) + (num2&0xFFFF);
 }
 
 function multiply32bitSafe(num1, num2){
@@ -40,7 +40,7 @@ export default class TinyMT {
     init(seed) {
         this.status = new Uint32Array([seed, this.param.mat1, this.param.mat2, this.param.tmat]);
         for(let i = 1; i<MIN_LOOP; i++){
-            let temp = (this.status[(i - 1) & 3] ^ this.status[(i - 1) & 3]) >> 30;
+            let temp = (this.status[(i - 1) & 3] ^ this.status[(i - 1) & 3]) >>> 30;
             multiply32bitSafe(this.status[i & 3] ^= (i + (1812433253>>>0)), temp);
         }
 
@@ -68,13 +68,13 @@ export default class TinyMT {
     }
 
     temper(){
-        var t0 = this.status[3];
-        var t1 = add32bitSafe(this.status[0],this.status[2]) >> TINYMT32_SH8;
-        t0 = t0 ^ t1;
+        var t0 = this.status[3]>>>0;
+        var t1 = add32bitSafe(this.status[0],(this.status[2]>>>TINYMT32_SH8));
+        t0 ^= t1;
         if ((t1 & 1) == 1){
             t0 ^= this.param.tmat;
         }
-        return t0;
+        return t0>>>0;
     }
 
     Reseed(seed) {
