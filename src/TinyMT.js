@@ -1,5 +1,6 @@
 function leftShift32bitSafe(base, bits){
-    return (base & (Math.pow(2,32-bits)-1)) * Math.pow(2,bits);
+    var temp = (base & (Math.pow(2,32-bits)-1)) * Math.pow(2,bits);
+    return temp;
 }
 
 function add32bitSafe(num1, num2){
@@ -53,9 +54,11 @@ export default class TinyMT {
 
     nextState(){
         var y = this.status[3];
-        var x = (this.status[0] & TINYMT32_MASK) ^ this.status[1] ^ this.status[2];
+        var x = ((this.status[0] & TINYMT32_MASK) ^ this.status[1] ^ this.status[2])>>>0;
+        //x >>>= 0;
         x ^= leftShift32bitSafe(x,TINYMT32_SH0);
-        y ^= (y >> TINYMT32_SH0) ^ x;
+        y ^= ((y >>> TINYMT32_SH0) ^ x)>>>0;
+        //y >>>= 0;
         this.status[0] = this.status[1];
         this.status[1] = this.status[2];
         this.status[2] = leftShift32bitSafe(y,TINYMT32_SH1) ^ x;
