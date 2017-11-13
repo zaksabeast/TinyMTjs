@@ -7,8 +7,10 @@ function add32bitSafe(num1, num2){
     return ((((num1>>>16) + (num2>>>16))&0xFFFF)*0x10000) + (num1&0xFFFF) + (num2&0xFFFF);
 }
 
-function multiply32bitSafe(num1, num2){
-    return ((((num1>>>16) * num2)<<16) + (num1&0xFFFF) * num2)>>>0;
+function nextState(seed, add) {
+    var low = seed & 0xffff;
+    var a = (0x6c07 * low + (seed >>> 16) * 0x8965);
+    return 0x8965 * low + (a & 0xffff) * 0x10000 + add;
 }
 
 const TINYMT32_MASK = 0x7FFFFFFF,
@@ -40,9 +42,10 @@ export default class TinyMT {
 
     init(seed) {
         this.status = new Uint32Array([seed, this.param.mat1, this.param.mat2, this.param.tmat]);
+
         for(let i = 1; i<MIN_LOOP; i++){
-            let temp = (this.status[(i - 1) & 3] ^ this.status[(i - 1) & 3]) >>> 30;
-            multiply32bitSafe(this.status[i & 3] ^= (i + (1812433253>>>0)), temp);
+            let temp = (this.status[(i - 1) & 3] ^ (this.status[(i - 1) & 3] >>> 30)) >>> 0;
+            this.status[i & 3] ^= nextState(temp, i);
         }
 
         this.period_certification();
@@ -55,29 +58,27 @@ export default class TinyMT {
     nextState(){
         var y = this.status[3];
         var x = ((this.status[0] & TINYMT32_MASK) ^ this.status[1] ^ this.status[2])>>>0;
-        //x >>>= 0;
-        x ^= leftShift32bitSafe(x,TINYMT32_SH0);
-        y ^= ((y >>> TINYMT32_SH0) ^ x)>>>0;
-        //y >>>= 0;
+        x ^= leftShift32bitSafe(x, TINYMT32_SH0);
+        y ^= ((y >>> TINYMT32_SH0) ^ x) >>> 0;
         this.status[0] = this.status[1];
         this.status[1] = this.status[2];
-        this.status[2] = leftShift32bitSafe(y,TINYMT32_SH1) ^ x;
+        this.status[2] = leftShift32bitSafe(y, TINYMT32_SH1) ^ x;
         this.status[3] = y;
 
         if ((y & 1) == 1) {
-            this.status[1] = this.status[1] ^ this.param.mat1;
-            this.status[2] = this.status[2] ^ this.param.mat2;
+            this.status[1] ^= this.param.mat1;
+            this.status[2] ^= this.param.mat2;
         }
     }
 
     temper(){
-        var t0 = this.status[3]>>>0;
-        var t1 = add32bitSafe(this.status[0],(this.status[2]>>>TINYMT32_SH8));
+        var t0 = this.status[3];
+        var t1 = (add32bitSafe(this.status[0],(this.status[2] >>> TINYMT32_SH8)));
         t0 ^= t1;
         if ((t1 & 1) == 1){
             t0 ^= this.param.tmat;
         }
-        return t0>>>0;
+        return t0 >>> 0;
     }
 
     Reseed(seed) {
