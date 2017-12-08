@@ -1,24 +1,9 @@
-function leftShift32bitSafe(base, bits){
-    var temp = (base & (Math.pow(2,32-bits)-1)) * Math.pow(2,bits);
-    return temp;
-}
-
-function add32bitSafe(num1, num2){
-    return ((((num1>>>16) + (num2>>>16))&0xFFFF)*0x10000) + (num1&0xFFFF) + (num2&0xFFFF);
-}
-
-function nextState(seed, add) {
-    var low = seed & 0xffff;
-    var a = (0x6c07 * low + (seed >>> 16) * 0x8965);
-    return 0x8965 * low + (a & 0xffff) * 0x10000 + add;
-}
-
 const TINYMT32_MASK = 0x7FFFFFFF,
-    TINYMT32_SH0 = 1,
-    TINYMT32_SH1 = 10,
-    TINYMT32_SH8 = 8,
-    MIN_LOOP = 8,
-    PRE_LOOP = 8;
+      TINYMT32_SH0 = 1,
+      TINYMT32_SH1 = 10,
+      TINYMT32_SH8 = 8,
+      MIN_LOOP = 8,
+      PRE_LOOP = 8;
 
 const params = {
     mat1: 0x8f7011ee,
@@ -28,13 +13,13 @@ const params = {
 
 export default class TinyMT {
 
-    constructor(seed, param = params){
+    constructor(seed, param = params) {
         this.param = param;
-        if(typeof seed == "number"){
+        if(typeof seed == "number") {
             this.init(seed);
         } else {
             this.status = new Uint32Array(4);
-            for (var i = 0; i < 4; i++){
+            for (var i = 0; i < 4; i++) {
                 this.status[i] = seed[i];
             }
         }
@@ -42,27 +27,28 @@ export default class TinyMT {
 
     init(seed) {
         this.status = new Uint32Array([seed, this.param.mat1, this.param.mat2, this.param.tmat]);
+        var s;
 
-        for(let i = 1; i<MIN_LOOP; i++){
-            let temp = (this.status[(i - 1) & 3] ^ (this.status[(i - 1) & 3] >>> 30)) >>> 0;
-            this.status[i & 3] ^= nextState(temp, i);
+        for(let i = 1; i < MIN_LOOP; i++) {
+            s = this.status[(i - 1) & 3] ^ (this.status[(i - 1) & 3] >>> 30);
+            this.status[i & 3] ^= ((((s >>> 16) * 0x6C078965) << 16) + (s & 0xffff) * 0x6C078965) + i;
         }
 
         this.period_certification();
 
-        for(let i = 0; i<PRE_LOOP; i++){
+        for(let i = 0; i < PRE_LOOP; i++) {
             this.nextState();
         }
     }
 
-    nextState(){
+    nextState() {
         var y = this.status[3];
-        var x = ((this.status[0] & TINYMT32_MASK) ^ this.status[1] ^ this.status[2])>>>0;
-        x ^= leftShift32bitSafe(x, TINYMT32_SH0);
-        y ^= ((y >>> TINYMT32_SH0) ^ x) >>> 0;
+        var x = ((this.status[0] & TINYMT32_MASK) ^ this.status[1] ^ this.status[2]);
+        x ^= (x << TINYMT32_SH0);
+        y ^= (y >>> TINYMT32_SH0) ^ x;
         this.status[0] = this.status[1];
         this.status[1] = this.status[2];
-        this.status[2] = leftShift32bitSafe(y, TINYMT32_SH1) ^ x;
+        this.status[2] = x ^ (y << TINYMT32_SH1);
         this.status[3] = y;
 
         if ((y & 1) == 1) {
@@ -71,11 +57,11 @@ export default class TinyMT {
         }
     }
 
-    temper(){
+    temper() {
         var t0 = this.status[3];
-        var t1 = (add32bitSafe(this.status[0],(this.status[2] >>> TINYMT32_SH8)));
+        var t1 = this.status[0] + (this.status[2] >>> TINYMT32_SH8);
         t0 ^= t1;
-        if ((t1 & 1) == 1){
+        if ((t1 & 1) == 1) {
             t0 ^= this.param.tmat;
         }
         return t0 >>> 0;
@@ -91,7 +77,7 @@ export default class TinyMT {
         }
     }
 
-    Nextuint(){
+    Nextuint() {
         this.nextState();
         return this.temper();
     }
