@@ -11,7 +11,7 @@ const params = {
     tmat: 0x3793fdff
 };
 
-export default class TinyMT {
+class TinyMT {
 
     constructor(seed, param = params) {
         this.param = param;
@@ -77,9 +77,11 @@ export default class TinyMT {
         }
     }
 
-    Nextuint() {
+    GetNext32Bit() {
         this.nextState();
         return this.temper();
     }
 
 }
+
+module.exports = { TinyMT };
